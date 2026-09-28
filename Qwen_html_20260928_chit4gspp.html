@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduGame: Sistem Pemindah Tenaga Sepeda Motor</title>
+    <style>
+        :root {
+            --primary: #ff6b00;
+            --secondary: #007bff;
+            --bg-dark: #121212;
+            --bg-card: #1e1e1e;
+            --text-main: #f8f9fa;
+            --text-muted: #adb5bd;
+            --success: #28a745;
+            --danger: #dc3545;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            color: var(--primary);
+            font-size: 2.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255, 107, 0, 0.3);
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-top: 5px;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--bg-card);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Menu Screen */
+        .menu-content {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, var(--primary), #ff8c00);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(255, 107, 0, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 107, 0, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, var(--secondary), #0056b3);
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+        }
+
+        /* Level 1: Drag and Drop */
+        .level-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .pool-container, .assembly-container {
+            margin-bottom: 30px;
+        }
+
+        .pool-container h3, .assembly-container h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .items-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            min-height: 100px;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 10px;
+            border: 2px dashed #444;
+        }
+
+        .assembly-line {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            min-height: 100px;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 10px;
+            border: 2px solid var(--secondary);
+        }
+
+        .drag-item {
+            background: #333;
+            border: 2px solid #555;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: grab;
+            transition: all 0.2s;
+            font-weight: 500;
+            user-select: none;
+        }
+
+        .drag-item:hover {
+            border-color: var(--primary);
+            background: #3a3a3a;
+        }
+
+        .drag-item.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .drop-zone {
+            min-width: 140px;
+            min-height: 60px;
+            border: 2px dashed #666;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-style: italic;
+            transition: all 0.2s;
+            text-align: center;
+            padding: 5px;
+            font-size: 0.95rem;
+        }
+
+        .drop-zone.over {
+            border-color: var(--primary);
+            background: rgba(255, 107, 0, 0.1);
+        }
+
+        .drop-zone.filled {
+            border-style: solid;
+            border-color: var(--secondary);
+            background: #333;
+            color: white;
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        /* Level 2: Quiz */
+        .quiz-content {
+            text-align: center;
+        }
+
+        .question-box {
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--primary);
+        }
+
+        .question-box h2 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            text-align: left;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            text-align: left;
+        }
+
+        .option-btn {
+            background: #333;
+            border: 2px solid #555;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .option-btn:hover {
+            border-color: var(--secondary);
+            background: #3a3a3a;
+        }
+
+        .option-btn.correct {
+            border-color: var(--success);
+            background: rgba(40, 167, 69, 0.2);
+        }
+
+        .option-btn.wrong {
+            border-color: var(--danger);
+            background: rgba(220, 53, 69, 0.2);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        /* Result Screen */
+        .result-content {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), #ff8c00);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            font-size: 3rem;
+            font-weight: bold;
+            box-shadow: 0 0 30px rgba(255, 107, 0, 0.5);
+        }
+
+        .feedback-msg {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            color: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            header h1 {
+                font-size: 1.6rem;
+            }
+            .game-container {
+                padding: 15px;
+            }
+            .drop-zone {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🏍️ EduGame: Power Transmission</h1>
+        <p>Sistem Pemindah Tenaga Sepeda Motor</p>
+    </header>
+
+    <div class="game-container">
+        <!-- SCREEN: MENU -->
+        <div id="screen-menu" class="screen active">
+            <div class="menu-content">
+                <h2 style="margin-bottom: 20px; color: var(--secondary);">Selamat Datang, Calon Mekanik Handal!</h2>
+                <p style="margin-bottom: 30px; color: var(--text-muted); line-height: 1.6;">
+                    Uji pemahaman Anda tentang <strong>Sistem Pemindah Tenaga Sepeda Motor</strong>. <br>
+                    Anda akan melewati 2 tantangan: <br>
+                    <strong>Level 1:</strong> Merakit urutan aliran tenaga dari mesin ke roda. <br>
+                    <strong>Level 2:</strong> Kuis pemahaman fungsi komponen (Manual & CVT).
+                </p>
+                <button class="btn" onclick="startGame()">MULAI MISI</button>
+            </div>
+        </div>
+
+        <!-- SCREEN: LEVEL 1 (DRAG & DROP) -->
+        <div id="screen-level1" class="screen">
+            <div class="level-header">
+                <h2>Level 1: Alur Tenaga Sepeda Motor</h2>
+                <span id="level1-status" style="color: var(--text-muted);">Seret komponen ke jalur perakitan</span>
+            </div>
+            
+            <div class="pool-container">
+                <h3>📦 Komponen Tersedia:</h3>
+                <div id="items-pool" class="items-pool"></div>
+            </div>
+
+            <div class="assembly-container">
+                <h3>🛠️ Jalur Perakitan (Urutkan dari Sumber Tenaga ke Penggerak):</h3>
+                <div id="assembly-line" class="assembly-line"></div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="checkAssembly()">CEK PERAKITAN</button>
+                <button class="btn" style="background: #555; box-shadow: none;" onclick="resetLevel1()">RESET</button>
+            </div>
+        </div>
+
+        <!-- SCREEN: LEVEL 2 (QUIZ) -->
+        <div id="screen-level2" class="screen">
+            <div class="level-header">
+                <h2>Level 2: Kuis Pemahaman</h2>
+                <span id="quiz-progress-text">Soal 1 dari 5</span>
+            </div>
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill" style="width: 20%"></div>
+            </div>
+            <div class="quiz-content">
+                <div class="question-box">
+                    <h2 id="question-text">Loading question...</h2>
+                    <div id="options-container" class="options-grid"></div>
+                </div>
+                <div id="feedback-area" style="margin-top: 20px; min-height: 30px; font-weight: bold;"></div>
+                <button id="next-btn" class="btn" style="display: none;" onclick="nextQuestion()">LANJUT</button>
+            </div>
+        </div>
+
+        <!-- SCREEN: RESULT -->
+        <div id="screen-result" class="screen">
+            <div class="result-content">
+                <h2 style="color: var(--primary); margin-bottom: 20px;">MISI SELESAI!</h2>
+                <div class="score-circle" id="final-score">0</div>
+                <p class="feedback-msg" id="final-feedback">Feedback will appear here</p>
+                <button class="btn" onclick="location.reload()">MAIN LAGI</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== DATA SPESIFIK SEPEDA MOTOR ====================
+        const correctOrder = [
+            "Mesin (Engine)",
+            "Kopling (Clutch)",
+            "Transmisi (Gearbox/CVT)",
+            "Rantai / V-Belt",
+            "Gigi Sprocket / Pulley",
+            "Roda Belakang (Rear Wheel)"
+        ];
+
+        const quizData = [
+            {
+                question: "Apa fungsi utama dari kopling (clutch) pada sepeda motor?",
+                options: [
+                    "Mengubah arah putaran 90 derajat",
+                    "Memutus dan menyambung tenaga dari mesin ke transmisi",
+                    "Membagi putaran ke dua roda saat belok",
+                    "Mengubah torsi menjadi kecepatan tinggi"
+                ],
+                correct: 1
+            },
+            {
+                question: "Pada sepeda motor matic (CVT), komponen berbentuk karet berbentuk 'V' yang meneruskan tenaga dari puli primer ke sekunder adalah...",
+                options: [
+                    "Rantai (Chain)",
+                    "V-Belt",
+                    "Poros Propeler",
+                    "Kampas Ganda"
+                ],
+                correct: 1
+            },
+            {
+                question: "Apa fungsi utama dari gigi sprocket (gear depan dan belakang) pada motor tipe bebek/sport?",
+                options: [
+                    "Mendinginkan mesin saat berjalan",
+                    "Meneruskan dan mengubah rasio putaran dari transmisi ke roda belakang",
+                    "Menahan agar roda tidak selip saat hujan",
+                    "Mengurangi getaran pada rangka motor"
+                ],
+                correct: 1
+            },
+            {
+                question: "Mengapa rantai sepeda motor perlu dilumasi (dichain lube) dan dikencangkan secara berkala?",
+                options: [
+                    "Agar mesin tidak cepat panas",
+                    "Untuk mencegah keausan, karat, dan mengurangi suara berisik",
+                    "Agar bahan bakar lebih irit",
+                    "Untuk menambah kecepatan maksimal motor"
+                ],
+                correct: 1
+            },
+            {
+                question: "Pada motor sport transmisi manual, komponen internal yang berfungsi menggeser gigi percepatan saat tuas diinjak adalah...",
+                options: [
+                    "Kampas kopling",
+                    "V-Belt dan Roller",
+                    "Shift drum dan garpu pemindah (shift fork)",
+                    "Rantai dan sprocket"
+                ],
+                correct: 2
+            }
+        ];
+
+        // ==================== STATE ====================
+        let currentLevel = 1;
+        let currentQuestionIndex = 0;
+        let totalScore = 0;
+        let draggedItem = null;
+
+        // ==================== LEVEL 1 LOGIC ====================
+        function startGame() {
+            showScreen('screen-level1');
+            initLevel1();
+        }
+
+        function initLevel1() {
+            const pool = document.getElementById('items-pool');
+            const assembly = document.getElementById('assembly-line');
+            pool.innerHTML = '';
+            assembly.innerHTML = '';
+
+            // Shuffle items for pool
+            let shuffled = [...correctOrder].sort(() => Math.random() - 0.5);
+            
+            shuffled.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'drag-item';
+                div.textContent = item;
+                div.draggable = true;
+                div.addEventListener('dragstart', dragStart);
+                div.addEventListener('dragend', dragEnd);
+                pool.appendChild(div);
+            });
+
+            // Create drop zones
+            for (let i = 0; i < correctOrder.length; i++) {
+                const zone = document.createElement('div');
+                zone.className = 'drop-zone';
+                zone.textContent = `Posisi ${i + 1}`;
+                zone.dataset.index = i;
+                zone.addEventListener('dragover', dragOver);
+                zone.addEventListener('dragleave', dragLeave);
+                zone.addEventListener('drop', drop);
+                assembly.appendChild(zone);
+            }
+        }
+
+        function dragStart(e) {
+            draggedItem = e.target;
+            e.target.classList.add('dragging');
+        }
+
+        function dragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function dragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('over');
+        }
+
+        function dragLeave(e) {
+            e.currentTarget.classList.remove('over');
+        }
+
+        function drop(e) {
+            e.preventDefault();
+            const zone = e.currentTarget;
+            zone.classList.remove('over');
+
+            if (zone.classList.contains('filled')) {
+                // If zone is filled, move existing item back to pool
+                const existingItem = zone.firstChild;
+                document.getElementById('items-pool').appendChild(existingItem);
+            }
+
+            zone.textContent = draggedItem.textContent;
+            zone.classList.add('filled');
+            zone.dataset.value = draggedItem.textContent;
+            
+            // Remove from pool
+            draggedItem.remove();
+        }
+
+        function resetLevel1() {
+            initLevel1();
+            document.getElementById('level1-status').textContent = "Seret komponen ke jalur perakitan";
+            document.getElementById('level1-status').style.color = "var(--text-muted)";
+        }
+
+        function checkAssembly() {
+            const zones = document.querySelectorAll('.drop-zone');
+            let isCorrect = true;
+            let filledCount = 0;
+
+            zones.forEach((zone, index) => {
+                if (zone.dataset.value === correctOrder[index]) {
+                    zone.style.borderColor = 'var(--success)';
+                    zone.style.background = 'rgba(40, 167, 69, 0.1)';
+                    filledCount++;
+                } else {
+                    isCorrect = false;
+                    zone.style.borderColor = 'var(--danger)';
+                    zone.style.background = 'rgba(220, 53, 69, 0.1)';
+                }
+            });
+
+            if (filledCount < correctOrder.length) {
+                document.getElementById('level1-status').textContent = "Lengkapi semua posisi terlebih dahulu!";
+                document.getElementById('level1-status').style.color = "var(--danger)";
+                return;
+            }
+
+            if (isCorrect) {
+                totalScore += 50; // 50 points for level 1
+                document.getElementById('level1-status').textContent = "Sempurna! Lanjut ke Level 2...";
+                document.getElementById('level1-status').style.color = "var(--success)";
+                setTimeout(() => {
+                    currentLevel = 2;
+                    showScreen('screen-level2');
+                    loadQuestion();
+                }, 1500);
+            } else {
+                document.getElementById('level1-status').textContent = "Urutan masih ada yang salah. Coba lagi!";
+                document.getElementById('level1-status').style.color = "var(--danger)";
+                setTimeout(resetLevel1, 1500);
+            }
+        }
+
+        // ==================== LEVEL 2 LOGIC ====================
+        function loadQuestion() {
+            const q = quizData[currentQuestionIndex];
+            document.getElementById('question-text').textContent = q.question;
+            document.getElementById('quiz-progress-text').textContent = `Soal ${currentQuestionIndex + 1} dari ${quizData.length}`;
+            document.getElementById('progress-fill').style.width = `${((currentQuestionIndex + 1) / quizData.length) * 100}%`;
+            document.getElementById('feedback-area').textContent = '';
+            document.getElementById('next-btn').style.display = 'none';
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt;
+                btn.onclick = () => selectAnswer(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(selectedIndex, btn) {
+            const q = quizData[currentQuestionIndex];
+            const allBtns = document.querySelectorAll('.option-btn');
+            
+            // Disable all buttons
+            allBtns.forEach(b => b.onclick = null);
+
+            if (selectedIndex === q.correct) {
+                btn.classList.add('correct');
+                document.getElementById('feedback-area').textContent = "✅ Benar! Hebat!";
+                document.getElementById('feedback-area').style.color = "var(--success)";
+                totalScore += 10; // 10 points per correct answer
+            } else {
+                btn.classList.add('wrong');
+                allBtns[q.correct].classList.add('correct');
+                document.getElementById('feedback-area').textContent = "❌ Kurang tepat. Jawaban yang benar disorot hijau.";
+                document.getElementById('feedback-area').style.color = "var(--danger)";
+            }
+
+            document.getElementById('next-btn').style.display = 'inline-block';
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        // ==================== RESULT LOGIC ====================
+        function showResult() {
+            showScreen('screen-result');
+            document.getElementById('final-score').textContent = totalScore;
+            
+            let feedback = "";
+            if (totalScore >= 90) {
+                feedback = "Luar Biasa! Anda adalah Master Mekanik Sepeda Motor! 🏆";
+            } else if (totalScore >= 70) {
+                feedback = "Bagus! Pemahaman Anda tentang sistem kelistrikan dan pemindah tenaga sudah baik. 👍";
+            } else if (totalScore >= 50) {
+                feedback = "Cukup baik, namun perlu mengulang materi komponen CVT/Rantai. 📖";
+            } else {
+                feedback = "Jangan menyerah! Pelajari kembali modul sepeda motor dan coba lagi. 💪";
+            }
+            document.getElementById('final-feedback').textContent = feedback;
+        }
+
+        // ==================== UTILITIES ====================
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+    </script>
+</body>
+</html>
